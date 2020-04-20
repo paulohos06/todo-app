@@ -1,64 +1,54 @@
 <template>
-  <section class="container">
-    <div class="level-item">
-      <div class="columns is-multiline is-centered cards-container" id="sectioncontainer">
-        <div class="column is-narrow" v-for="card in cards" :key="card.id">
-          <article class="message" :class="card.style">
-            <div class="message-header">
-              <p class="message-header-title">{{ card.title }}</p>
-            </div>
-            <div class="message-body">
-              <div class="board-item" v-for="task in tasks" :key="task">
-                <div class="board-item-content">
-                  <span>{{ task }}</span>
-                </div>
-              </div>
-            </div>
-          </article>
-        </div>
-        <!-- .column is-narrow -->
+  <div class="container">
+    <div class="columns">
+      <div class="column is-6">
+        <card :tasks="incomplete" :title="'to do'" :className="'is-warning'" @onFinish="finish($event)" />
       </div>
-      <!-- #sectioncontainer -->
+      <div class="column is-6">
+        <card :tasks="complete" :title="'done'" :className="'is-success'" />
+      </div>
     </div>
-    <!-- .level-item -->
-  </section>
+    <!-- .columns -->
+  </div>
 </template>
 
 <script>
+import Card from '@/components/Card.vue'
+import bus from '@/tools/eventBus'
+
 export default {
   name: "Cards",
+  components: { Card },
   data() {
     return {
-      cards: [
-        { id: 0, style: 'is-link', title: 'TO DO' },
-        { id: 1, style: 'is-black', title: 'DONE' }
-      ],
-      tasks: [
-        'IR AO MERCADO',
-        'JOGAR VIDEOGAME',
-        'CORTAR O CABELO',
-        'DORMIR'
-      ]
+      incomplete: [],
+      complete: []
+    }
+  },
+  mounted() {
+    bus.insert(item => {
+      return this.addTask(item)
+    })
+  },
+  methods: {
+    addTask(task) {
+      this.incomplete.push(task.toUpperCase())
+      this.progress()
+    },
+    finish(task) {
+      this.complete.push(task)
+      const index = this.incomplete.indexOf(task)
+      if (index > -1) this.incomplete.splice(index, 1)
+      this.progress()
+    },
+    progress() {
+      const total = parseInt(this.incomplete.length) + parseInt(this.complete.length)
+      const value = this.complete.length/total * 100
+      this.$emit('progress', value)
     }
   }
 }
 </script>
 
 <style scoped>
-.message-header-title {
-  text-align: center;
-}
-.board-item-content {
-  word-break: break-all;
-  position: relative;
-  padding: 20px;
-  background: #fff;
-  border-radius: 4px;
-  font-size: 17px;
-  text-align: center;
-  cursor: pointer;
-  -webkit-box-shadow: 0px 1px 3px 0 rgba(0,0,0,0.2);
-  box-shadow: 0px 1px 3px 0 rgba(0,0,0,0.2);
-  margin: 5px;
-}
 </style>
